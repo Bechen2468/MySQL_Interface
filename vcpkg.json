@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "dependencies": [
     "mysql-connector-cpp",
-    "eigen3"
+    "eigen3",
+    "gtest"
   ]
 }

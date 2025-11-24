@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 
 # Get vcpkg
@@ -29,11 +30,18 @@ find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 file(GLOB_RECURSE my_sources src/*.cpp)
 
 # Create an executable
-add_executable(${PROJECT_NAME} ${my_sources})
+add_library(${PROJECT_NAME} ${my_sources})
 
 # Set my include dir
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 # Link the mysql connector
-target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::mysql-connector-cpp::connector)
+target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::mysql-connector-cpp::connector)
 
+
+option(TESTS "Enable unit and integration tests" ON)
+
+if(TESTS)
+    enable_testing()
+    add_subdirectory(unittests)
+endif()
