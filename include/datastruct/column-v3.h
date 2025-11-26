@@ -1,5 +1,5 @@
-#ifndef MY_COLUMN2_H
-#define MY_COLUMN2_H
+#ifndef MY_COLUMN3_H
+#define MY_COLUMN3_H
 
 #include <iostream>
 #include <string>
@@ -12,7 +12,7 @@
 
 
 namespace sqlxeigen::matrix {
-struct ColumnV2 {
+struct ColumnV3 {
     enum Type {
         STRING = 0,
         UINT8 = 1,
@@ -28,6 +28,14 @@ private:
     void* _rawPtr;
     size_t _typeSize;
 
+    uint8_t* _uint8Ptr;
+    int* _intPtr;
+    uint64_t* _ulongPtr;
+    int64_t* _longPtr;
+    float* _floatPtr;
+    double* _doublePtr;
+
+
     std::variant<
         std::vector<std::string>, 
         Eigen::VectorX<uint8_t>,
@@ -39,7 +47,7 @@ private:
     mysqlx::Type _mysqlType;
 
 public:
-    ColumnV2(mysqlx::Type mysqlType, size_t size, const std::string& name = "");
+    ColumnV3(mysqlx::Type mysqlType, size_t size, const std::string& name = "");
 
     
     size_t size() const;
@@ -50,12 +58,15 @@ public:
 
     std::string name() const;
 
-    void* rawPtr();
 
-    template<typename T>
-    inline T& get(size_t i);
-    
-    inline std::string& get_string(size_t i);
+    inline std::string& get_string(size_t i)   { return std::get<std::vector<std::string>>(_data)[i]; };
+    inline uint8_t&     get_uint8(size_t i)    { return _uint8Ptr[i]; };
+    __forceinline int&         get_int(size_t i)      { return _intPtr[i]; };
+    // gcc/clang:  inline __attribute__((always_inline))
+    inline uint64_t&    get_uint64_t(size_t i) { return _ulongPtr[i]; };
+    inline int64_t&     get_int64_t(size_t i)  { return _longPtr[i]; };
+    inline float&       get_float(size_t i)    { return _floatPtr[i]; };
+    inline double&      get_double(size_t i)   { return _doublePtr[i]; };
 
     template<typename VecT>
     VecT& getVector();
@@ -63,16 +74,8 @@ public:
 
 
 
-
-template<typename T>
-inline T& ColumnV2::get(size_t i) {
-    return reinterpret_cast<T*>(_rawPtr)[i];
-}
-
-
-
 template<typename VecT>
-VecT& ColumnV2::getVector() {
+VecT& ColumnV3::getVector() {
     return std::get<VecT>(_data);
 }
 

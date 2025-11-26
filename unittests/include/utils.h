@@ -112,7 +112,7 @@ namespace utils {
                 _stop = std::chrono::steady_clock::now();
             }
 
-            long long duration_microS() const {
+            long long duration_muS() const {
                 return std::chrono::duration_cast<std::chrono::microseconds>(_stop - _start).count();
             }
 
@@ -136,7 +136,7 @@ namespace utils {
         void printHeader() {
             std::cout 
                 << std::left  << std::setw(30) << "Benchmark"
-                << std::right << std::setw(12) << "Time (ms)"
+                << std::right << std::setw(12) << "Time (µs)"
                 << "\n";
             std::cout << std::string(42, '-') << "\n";
         }
@@ -153,7 +153,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -176,7 +176,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -199,7 +199,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -222,7 +222,53 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
+            }
+
+            long long res = 0;
+            for(int i = 0; i < results.size(); ++i) {
+                res += results[i];
+            }
+            res /= results.size();
+            return res;
+        }
+
+        
+        long long avg_mycolv2_inorder(sqlxeigen::matrix::ColumnV2& data) {
+            std::vector<long long> results;
+            for(int i = 0; i < 20; ++i) {
+                utils::time::Timer t;
+                int r = 0;
+                t.start();
+                for(int j = 0; j < data.size(); ++j) {
+                    r += data.get<int>(j);
+                }
+
+                t.stop();
+                results.push_back(t.duration_muS());
+            }
+
+            long long res = 0;
+            for(int i = 0; i < results.size(); ++i) {
+                res += results[i];
+            }
+            res /= results.size();
+            return res;
+        }
+
+        
+        long long avg_mycolv3_inorder(sqlxeigen::matrix::ColumnV3& data) {
+            std::vector<long long> results;
+            for(int i = 0; i < 20; ++i) {
+                utils::time::Timer t;
+                int r = 0;
+                t.start();
+                for(int j = 0; j < data.size(); ++j) {
+                    r += data.get_int(j);
+                }
+
+                t.stop();
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -245,7 +291,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -269,7 +315,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;
@@ -292,7 +338,7 @@ namespace utils {
                 }
 
                 t.stop();
-                results.push_back(t.duration_microS());
+                results.push_back(t.duration_muS());
             }
 
             long long res = 0;

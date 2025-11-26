@@ -410,13 +410,17 @@ TEST_F(MySQL_Interface_Tests, Benchmark_InOrder_Access) {
     int test_size = 1000000;
 
     // Build data
-    sqlxeigen::matrix::Matrix data_mat;
-    data_mat.addColumn(mysqlx::Type::INT, test_size, "value");
     std::vector<int> data_vec(test_size);
+    sqlxeigen::matrix::Matrix data_mat;
+    sqlxeigen::matrix::ColumnV2 data_colv2(mysqlx::Type::INT, test_size, "value");
+    sqlxeigen::matrix::ColumnV3 data_colv3(mysqlx::Type::INT, test_size, "value");
+    data_mat.addColumn(mysqlx::Type::INT, test_size, "value");
 
     for(int i = 0; i < test_size; ++i) {
-        data_mat.get<int>(i, "value") = i+1;
         data_vec[i] = i+1;
+        data_mat.get<int>(i, "value") = i+1;
+        data_colv2.get<int>(i) = i+1;
+        data_colv3.get_int(i) = i+1;
     }
 
 
@@ -446,5 +450,29 @@ TEST_F(MySQL_Interface_Tests, Benchmark_InOrder_Access) {
     utils::benchmark::printRow("MyMatrix.get<int>(int, string)",    utils::benchmark::avg_mymat_inorder(data_mat, "value"));
     utils::benchmark::printRow("MyMatrix.get<int>(int, int)",       utils::benchmark::avg_mymat_index_inorder(data_mat, 0));
     utils::benchmark::printRow("MyColumn.get<int>()",               utils::benchmark::avg_mycol_inorder(data_mat.column("value")));
+    utils::benchmark::printRow("MyColumnV2.get<int>()",             utils::benchmark::avg_mycolv2_inorder(data_colv2));
+    utils::benchmark::printRow("MyColumnV3.get_int()",             utils::benchmark::avg_mycolv3_inorder(data_colv3));
     utils::benchmark::printRow("std::vector<mysqlx::Row>",          utils::benchmark::avg_mysql_inorder(data_sql));
 }
+
+
+
+/*
+DEBUG:
+
+Benchmark                       Time (µs)
+------------------------------------------
+std::vector<int>                      4819
+Eigen::VectorXi                      87172
+Eigen::VectorXi.raw                   3879
+MyMatrix.get<int>(int, string)      615799
+MyMatrix.get<int>(int, int)         183296
+MyColumn.get<int>()                 168073
+MyColumnV2.get<int>()                46291
+MyColumnV3.get<int>()                46369
+std::vector<mysqlx::Row>            883041
+
+RELEASE:
+
+
+*/

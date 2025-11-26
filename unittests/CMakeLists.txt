@@ -20,7 +20,11 @@ add_executable(${PROJECT_NAME} main.cpp)
 # Set my include dir
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest mysql-interface)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    GTest::gtest 
+    mysql-interface
+)
+
 
 
 # --- GTest integration ---

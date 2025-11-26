@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 
 # Get vcpkg
@@ -37,6 +37,27 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 # Link the mysql connector
 target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::mysql-connector-cpp::connector)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "-d")
+
+
+
+# =========================
+# Performance compilation flags
+# =========================
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        $<$<CONFIG:Debug>:/Od /RTC1>
+        $<$<CONFIG:Release>:/O2 /Ob3 /GL /DNDEBUG>
+    )
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE 
+        $<$<CONFIG:Debug>:-O0 -g>
+        $<$<CONFIG:Release>:-O3 -march=native -ffast-math -flto -DNDEBUG>
+    )
+endif()
+
+
 
 
 option(TESTS "Enable unit and integration tests" ON)
