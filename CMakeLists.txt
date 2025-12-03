@@ -42,6 +42,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "-d")
 
 
 
+
 # =========================
 # Performance compilation flags
 # =========================
@@ -59,10 +60,11 @@ endif()
 
 
 
-
 option(TESTS "Enable unit and integration tests" ON)
 
 if(TESTS)
     enable_testing()
     add_subdirectory(unittests)
 endif()
+
+

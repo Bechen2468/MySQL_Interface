@@ -8,22 +8,28 @@
 
 namespace sqlxeigen::datatype {
 struct Datetime {
-    long long raw;
+    int64_t raw;
 
-    Datetime(): raw(std::time(nullptr)) {}
+    Datetime(): raw(0) {}
 
-    explicit Datetime(long long raw): raw(raw) {}
+    explicit Datetime(int64_t raw): raw(raw) {}    
+
+    void setNow() { raw = std::time(nullptr); }
 
 
-    bool operator==(const Datetime& dt) const { return raw == dt.raw; }
-    bool operator==(Datetime& dt) const { return raw == dt.raw; }
-    bool operator==(const Datetime& dt) { return raw == dt.raw; }
-    bool operator==(Datetime& dt) { return raw == dt.raw; }
-    
-    bool operator==(const long long& dt) const { return raw == dt; }
-    bool operator==(long long& dt) const { return raw == dt; }
-    bool operator==(const long long& dt) { return raw == dt; }
-    bool operator==(long long& dt) { return raw == dt; }
+    // Member comparison with int64_t
+    inline bool operator==(const int64_t& rhs) const { return raw == rhs; }
+    inline bool operator<(const int64_t& rhs) const  { return raw < rhs; }
+    inline bool operator<=(const int64_t& rhs) const { return raw <= rhs; }
+    inline bool operator>(const int64_t& rhs) const  { return raw > rhs; }
+    inline bool operator>=(const int64_t& rhs) const { return raw >= rhs; }
+
+    // Member comparison with another Datetime
+    inline bool operator==(const Datetime& rhs) const { return raw == rhs.raw; }
+    inline bool operator<(const Datetime& rhs) const  { return raw < rhs.raw; }
+    inline bool operator<=(const Datetime& rhs) const { return raw <= rhs.raw; }
+    inline bool operator>(const Datetime& rhs) const  { return raw > rhs.raw; }
+    inline bool operator>=(const Datetime& rhs) const { return raw >= rhs.raw; }
 
 
     int year() const       { return _get_tm().tm_year + 1900; }
@@ -52,13 +58,14 @@ struct Datetime {
 private:
     // Copy of std::tm in UTC
     std::tm _get_tm() const {
-        std::tm out{};
-    #if defined(_WIN32)
-        gmtime_s(&out, &raw);
-    #else
-        gmtime_r(&timestamp, &out);
-    #endif
-        return out;
+        time_t t = raw;
+        return *gmtime(&t);;
+    //    std::tm out{};
+    //#if defined(_WIN32)
+    //    gmtime_s(&out, &raw);
+    //#else
+    //    gmtime_r(&raw, &out);
+    //#endif
     }
 
 
@@ -74,6 +81,12 @@ private:
     #endif
     }
 };
+
+inline bool operator==(const int64_t& lhs, const Datetime& rhs) { return rhs == lhs; }
+inline bool operator<(const int64_t& lhs,  const Datetime& rhs) { return rhs < lhs; }
+inline bool operator<=(const int64_t& lhs, const Datetime& rhs) { return rhs <= lhs; }
+inline bool operator>(const int64_t& lhs,  const Datetime& rhs) { return rhs > lhs; }
+inline bool operator>=(const int64_t& lhs, const Datetime& rhs) { return rhs >= lhs; }
 
 
 };

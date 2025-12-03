@@ -32,30 +32,35 @@ void BaseView::_setFromSQLRow(mysqlx::Row& row, size_t index) {
             case mysqlx::Type::ENUM:
             case mysqlx::Type::BYTES:
             case mysqlx::Type::TIME:
-            case mysqlx::Type::STRING:      result.get<std::string>(index, i) = row[i].get<std::string>();                      break;
+            case mysqlx::Type::STRING:      result.get<std::string>(index, i) = row[i].get<std::string>();  break;
             case mysqlx::Type::TINYINT:
-            case mysqlx::Type::BIT:         result.get<uint8_t>(index, i) = row[i].get<bool>();                                 break;
+            case mysqlx::Type::BIT:         result.get<uint8_t>(index, i) = row[i].get<bool>();             break;
             // Eigen
-            case mysqlx::Type::INT:         result.get<int>(index, i) = row[i].get<int>();                                      break;
-            case mysqlx::Type::BIGINT:      result.get<long long>(index, i) = row[i].get<long long>();                          break;
-            case mysqlx::Type::FLOAT:       result.get<float>(index, i) = row[i].get<float>();                                  break;
+            case mysqlx::Type::INT:         result.get<int>(index, i) = row[i].get<int>();                  break;
+            case mysqlx::Type::BIGINT:      result.get<int64_t>(index, i) = row[i].get<int64_t>();          break;
+            case mysqlx::Type::FLOAT:       result.get<float>(index, i) = row[i].get<float>();              break;
             case mysqlx::Type::DECIMAL:
-            case mysqlx::Type::DOUBLE:      result.get<double>(index, i) = row[i].get<double>();                                break;
+            case mysqlx::Type::DOUBLE:      result.get<double>(index, i) = row[i].get<double>();            break;
             case mysqlx::Type::DATE:
             case mysqlx::Type::DATETIME: 
+            case mysqlx::Type::TIMESTAMP:
             {
+                const size_t rawLen = row[i].getRawBytes().size();
                 const mysqlx::byte* raw = row[i].getRawBytes().begin();
 
-                datatype::Datetime dt;
+                datatype::Datetime dt(0);
                 dt.year((raw[1] << 7) | (raw[0] & 0x7f));
                 dt.month(raw[2]);
                 dt.day(raw[3]);
-                dt.hour(raw[4]);
-                dt.minute(raw[5]);
-                dt.second(raw[6]);
-                // microseconds= ((raw[9] << 14) | (raw[8] << 7) | (raw[7] & 0x7f));
+                
+                // Lengthchecking as datetime is depending on version packed and send in variable size.
+                // Only constant values are year month and day
+                if(rawLen > 4) dt.hour(raw[4]);
+                if(rawLen > 5) dt.minute(raw[5]);
+                if(rawLen > 6) dt.second(raw[6]);
+                // if(rawLen > 7) microseconds= ((raw[9] << 14) | (raw[8] << 7) | (raw[7] & 0x7f));
 
-                result.get<long long>(index, i) = dt.raw;
+                result.get<int64_t>(index, i) = dt.raw;
                 break;
             }
             default:

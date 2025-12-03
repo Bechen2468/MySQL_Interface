@@ -31,9 +31,9 @@ _name(name)
             _ulongPtr = std::get<3>(_data).data();
             break;
         case ColumnV3::Type::INT64:   
-            _data = Eigen::VectorX<long long>(size);    
+            _data = Eigen::VectorX<int64_t>(size);    
             _rawPtr = std::get<4>(_data).data();
-            _typeSize = sizeof(long long);
+            _typeSize = sizeof(int64_t);
             _longPtr = std::get<4>(_data).data();
             break;
         case ColumnV3::Type::FLOAT:   

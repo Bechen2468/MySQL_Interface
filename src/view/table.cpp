@@ -113,7 +113,7 @@ std::string Table::_buildInsert(sqlxeigen::matrix::Matrix& data, const std::unor
                 case matrix::Column::Type::UINT64:  query += std::to_string(row.get<uint64_t>(i));     break;
                 case matrix::Column::Type::FLOAT:   query += std::to_string(row.get<float>(i));        break;
                 case matrix::Column::Type::DOUBLE:  query += std::to_string(row.get<double>(i));       break;
-                case matrix::Column::Type::INT64:   query += std::to_string(row.get<long long>(i));    break;
+                case matrix::Column::Type::INT64:   query += std::to_string(row.get<int64_t>(i));    break;
             }
         }
         query += ")";

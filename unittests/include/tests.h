@@ -11,13 +11,27 @@
 
 class MySQL_Interface_Tests : public ::testing::Test {
 protected:
+    void SetUp() {
+        utils::mysql::reset_database();
+        //db_running = utils::docker::start_mysql();
+        //utils::mysql::add_db_pool("db_test");
+    }
+
+
+    void TearDown() {
+        //if(db_running) utils::docker::stop_mysql();
+    }
+
+
     //static void SetUpTestSuite() {
+    //    utils::mysql::reset_database();
     //    //db_running = utils::docker::start_mysql();
     //    //utils::mysql::add_db_pool("db_test");
     //}
 
+
     //static void TearDownTestSuite() {
-    //    //if (db_running) utils::docker::stop_mysql();
+    //    //if(db_running) utils::docker::stop_mysql();
     //}
 public:
     static inline bool db_running = false;
@@ -31,8 +45,8 @@ class MyEnvironment : public ::testing::Environment {
 
   // Override this to define how to set up the environment.
   void SetUp() override {
-        MySQL_Interface_Tests::db_running = utils::docker::start_mysql();
-        utils::mysql::add_db_pool("db_test");
+        MySQL_Interface_Tests::db_running = utils::docker::start_mysql("test-mysql", "testpass", "db_test", "3406", "34060");
+        utils::mysql::add_db_pool("testpass", "db_test", "34060");
     }
 
   // Override this to define how to tear down the environment.
@@ -68,7 +82,6 @@ TEST_F(MySQL_Interface_Tests, String_Simple) {
     // Check datacorrectness
     for(int i = 0; i < 10; ++i) {
         std::string v = qv.result.get<std::string>(i, "value");
-        std::cout << "Value[" << i << "]: " << v[0] << " Expected: " << std::to_string('a' + i) << std::endl;
         EXPECT_TRUE(v[0] == 'a' + i);
     }
 }
@@ -179,7 +192,7 @@ TEST_F(MySQL_Interface_Tests, Datetime_Simple) {
     dt.second(0);
 
     for(int i = 0; i < qv.result.rows(); ++i) {
-        sqlxeigen::datatype::Datetime v(qv.result.get<long long>(i, "value"));
+        sqlxeigen::datatype::Datetime v(qv.result.get<int64_t>(i, "value"));
         
         ASSERT_TRUE(dt == v);
 
@@ -222,7 +235,7 @@ TEST_F(MySQL_Interface_Tests, Row_Simple) {
         ASSERT_TRUE(row2.get<double>("v1") == (double)i / 2.0);
         ASSERT_TRUE(row2.get<std::string>("v2") == "test");
         ASSERT_TRUE(row2.get<uint8_t>("v3") == (i + 1) % 2);
-        ASSERT_TRUE(dt == row2.get<long long>("v4"));
+        ASSERT_TRUE(dt == row2.get<int64_t>("v4"));
 
         row1 = row1.next();
     }
@@ -267,7 +280,7 @@ TEST_F(MySQL_Interface_Tests, Table_Select_Simple) {
         ASSERT_TRUE(row2.get<double>("v1") == (double)i / 2.0);
         ASSERT_TRUE(row2.get<std::string>("v2") == "test");
         ASSERT_TRUE(row2.get<uint8_t>("v3") == (i + 1) % 2);
-        ASSERT_TRUE(dt == row2.get<long long>("v4"));
+        ASSERT_TRUE(dt == row2.get<int64_t>("v4"));
 
         row1 = row1.next();
     }
@@ -405,74 +418,61 @@ TEST_F(MySQL_Interface_Tests, Table_Delete) {
 }
 
 
-TEST_F(MySQL_Interface_Tests, Benchmark_InOrder_Access) {
+
+
+TEST_F(MySQL_Interface_Tests, BenchmarkRaw_InOrder_Access) {
     if(!db_running) GTEST_SKIP() << "Skipping: DB not running.";
     int test_size = 1000000;
 
     // Build data
-    std::vector<int> data_vec(test_size);
+    std::vector<float> data_vec(test_size);
     sqlxeigen::matrix::Matrix data_mat;
-    sqlxeigen::matrix::ColumnV2 data_colv2(mysqlx::Type::INT, test_size, "value");
-    sqlxeigen::matrix::ColumnV3 data_colv3(mysqlx::Type::INT, test_size, "value");
-    data_mat.addColumn(mysqlx::Type::INT, test_size, "value");
+    sqlxeigen::matrix::ColumnV2 data_colv2(mysqlx::Type::FLOAT, test_size, "value");
+    sqlxeigen::matrix::ColumnV3 data_colv3(mysqlx::Type::FLOAT, test_size, "value");
+    data_mat.addColumn(mysqlx::Type::FLOAT, test_size, "value");
 
     for(int i = 0; i < test_size; ++i) {
-        data_vec[i] = i+1;
-        data_mat.get<int>(i, "value") = i+1;
-        data_colv2.get<int>(i) = i+1;
-        data_colv3.get_int(i) = i+1;
+        float val = i + i/10;
+        data_vec[i] = val;
+        data_mat.get<float>(i, "value") = val;
+        data_colv2.get<float>(i) = val;
+        data_colv3.get_float(i) = val;
     }
+    std::vector<float, Eigen::aligned_allocator<float>> v = data_mat.column("value").raw<std::vector<float, Eigen::aligned_allocator<float>>>();
+    Eigen::VectorXf eigenv = Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, 1>>(v.data(), v.size());
 
 
     std::string dbName = "db_test";
-    std::string tableName = "test_int";
+    std::string tableName = "test_float";
     sqlxeigen::view::Table table(dbName, tableName);
     ASSERT_TRUE(table.executeInsert(data_mat, {{"value", "value"}}));
     
     // Get sql result
     std::shared_ptr<sqlxeigen::ConnectionPool> pool = sqlxeigen::ConnectionPool::GetPool(dbName);
     std::unique_ptr<mysqlx::Session> sess = pool->get_session();
-    auto sql = sess->sql("SELECT * FROM test_int");
+    auto sql = sess->sql("SELECT * FROM test_float");
     mysqlx::SqlResult result = sql.execute();
     std::vector<mysqlx::Row> data_sql;
     mysqlx::Row row;
-    while(row = result.fetchOne()) {
+    while((row = result.fetchOne())) {
         data_sql.push_back(row);
     }
 
     pool->release_session(sess);
 
 
-    utils::benchmark::printHeader();
-    utils::benchmark::printRow("std::vector<int>",                  utils::benchmark::avg_vec_inorder(data_vec));
-    utils::benchmark::printRow("Eigen::VectorXi",                   utils::benchmark::avg_eigen_inorder(data_mat.column("value").raw<Eigen::VectorXi>()));
-    utils::benchmark::printRow("Eigen::VectorXi.raw",               utils::benchmark::avg_eigenraw_inorder(data_mat.column("value").raw<Eigen::VectorXi>()));
-    utils::benchmark::printRow("MyMatrix.get<int>(int, string)",    utils::benchmark::avg_mymat_inorder(data_mat, "value"));
-    utils::benchmark::printRow("MyMatrix.get<int>(int, int)",       utils::benchmark::avg_mymat_index_inorder(data_mat, 0));
-    utils::benchmark::printRow("MyColumn.get<int>()",               utils::benchmark::avg_mycol_inorder(data_mat.column("value")));
-    utils::benchmark::printRow("MyColumnV2.get<int>()",             utils::benchmark::avg_mycolv2_inorder(data_colv2));
-    utils::benchmark::printRow("MyColumnV3.get_int()",             utils::benchmark::avg_mycolv3_inorder(data_colv3));
-    utils::benchmark::printRow("std::vector<mysqlx::Row>",          utils::benchmark::avg_mysql_inorder(data_sql));
+
+    int64_t baseRuntime = utils::benchmark::avg_vec_inorder(data_vec);
+    utils::benchmark::printHeaderRelativ();
+    utils::benchmark::printRowRelativ("std::vector<float>[i]",                  1.0);
+    utils::benchmark::printRowRelativ("MyMatrix.get<float>(i, colName)",        (double)utils::benchmark::avg_mymat_inorder(data_mat, "value") / baseRuntime);
+    utils::benchmark::printRowRelativ("MyMatrix.get<float>(i, colNum)",         (double)utils::benchmark::avg_mymat_index_inorder(data_mat, 0) / baseRuntime);
+    utils::benchmark::printRowRelativ("MyColumn.get<float>(i)",                 (double)utils::benchmark::avg_mycol_inorder(data_mat.column("value")) / baseRuntime);
+    utils::benchmark::printRowRelativ("MyColumnV2.get<float>(i)",               (double)utils::benchmark::avg_mycolv2_inorder(data_colv2) / baseRuntime);
+    utils::benchmark::printRowRelativ("MyColumnV3.get_float(i)",                (double)utils::benchmark::avg_mycolv3_inorder(data_colv3) / baseRuntime);
+    utils::benchmark::printRowRelativ("Eigen::VectorXf(i)",                     (double)utils::benchmark::avg_eigen_inorder(eigenv) / baseRuntime);
+    utils::benchmark::printRowRelativ("Eigen::VectorXf.data()[i]",              (double)utils::benchmark::avg_eigenraw_inorder(eigenv) / baseRuntime);
+    utils::benchmark::printRowRelativ("std::vector<mysqlx::Row>.get<float>(i)", (double)utils::benchmark::avg_mysql_inorder(data_sql) / baseRuntime);
 }
 
 
-
-/*
-DEBUG:
-
-Benchmark                       Time (µs)
-------------------------------------------
-std::vector<int>                      4819
-Eigen::VectorXi                      87172
-Eigen::VectorXi.raw                   3879
-MyMatrix.get<int>(int, string)      615799
-MyMatrix.get<int>(int, int)         183296
-MyColumn.get<int>()                 168073
-MyColumnV2.get<int>()                46291
-MyColumnV3.get<int>()                46369
-std::vector<mysqlx::Row>            883041
-
-RELEASE:
-
-
-*/

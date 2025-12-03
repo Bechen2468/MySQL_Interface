@@ -7,16 +7,15 @@ _mysqlType(mysqlType),
 _name(name)
 {
     switch(type()) {
-        case Column::Type::STRING:  _data = std::vector<std::string>(size);     break;
-        case Column::Type::UINT8:   _data = Eigen::VectorX<uint8_t>(size);      break;
-        case Column::Type::INT:     _data = Eigen::VectorXi(size);              break;
-        case Column::Type::UINT64:  _data = Eigen::VectorX<uint64_t>(size);     break;
-        case Column::Type::INT64:   _data = Eigen::VectorX<long long>(size);    break;
-        case Column::Type::FLOAT:   _data = Eigen::VectorXf(size);              break;
-        case Column::Type::DOUBLE:  _data = Eigen::VectorXd(size);              break;
+        case Column::Type::STRING:  _data = std::vector<std::string, Eigen::aligned_allocator<std::string>>(size);     break;
+        case Column::Type::UINT8:   _data = std::vector<uint8_t, Eigen::aligned_allocator<uint8_t>>(size);      break;
+        case Column::Type::INT:     _data = std::vector<int, Eigen::aligned_allocator<int>>(size);  break;
+        case Column::Type::UINT64:  _data = std::vector<uint64_t, Eigen::aligned_allocator<uint64_t>>(size);  break;
+        case Column::Type::INT64:   _data = std::vector<int64_t, Eigen::aligned_allocator<int64_t>>(size);  break;
+        case Column::Type::FLOAT:   _data = std::vector<float, Eigen::aligned_allocator<float>>(size);  break;
+        case Column::Type::DOUBLE:  _data = std::vector<double, Eigen::aligned_allocator<double>>(size);  break;
     }
 }
-
 
 
 size_t Column::size() const {
@@ -24,7 +23,6 @@ size_t Column::size() const {
         return vec.size();
     }, _data);
 }
-
 
 
 Column::Type Column::type() const {
@@ -62,23 +60,6 @@ std::string Column::name() const {
 
 
 
-// Specific get template types
-template<> 
-std::string& Column::get<std::string>(size_t i) { return std::get<std::vector<std::string>>(_data)[i]; }
-template<> 
-uint8_t& Column::get<uint8_t>(size_t i)         { return std::get<Eigen::VectorX<uint8_t>>(_data)[i]; }
-
-template<> 
-int& Column::get<int>(size_t i)                 { return std::get<Eigen::VectorXi>(_data)[i]; }
-template<> 
-uint64_t& Column::get<uint64_t>(size_t i)       { return std::get<Eigen::VectorX<uint64_t>>(_data)[i]; }
-template<> 
-long long& Column::get<long long>(size_t i)     { return std::get<Eigen::VectorX<long long>>(_data)[i]; }
-
-template<> 
-float& Column::get<float>(size_t i)             { return std::get<Eigen::VectorXf>(_data)[i]; }
-template<> 
-double& Column::get<double>(size_t i)           { return std::get<Eigen::VectorXd>(_data)[i]; }
 
 
 };

@@ -39,7 +39,7 @@ private:
     std::variant<
         std::vector<std::string>, 
         Eigen::VectorX<uint8_t>,
-        Eigen::VectorXi, Eigen::VectorX<uint64_t>, Eigen::VectorX<long long>,
+        Eigen::VectorXi, Eigen::VectorX<uint64_t>, Eigen::VectorX<int64_t>,
         Eigen::VectorXf, Eigen::VectorXd
         > _data;
 
@@ -61,7 +61,7 @@ public:
 
     inline std::string& get_string(size_t i)   { return std::get<std::vector<std::string>>(_data)[i]; };
     inline uint8_t&     get_uint8(size_t i)    { return _uint8Ptr[i]; };
-    __forceinline int&         get_int(size_t i)      { return _intPtr[i]; };
+    inline int&         get_int(size_t i)      { return _intPtr[i]; };
     // gcc/clang:  inline __attribute__((always_inline))
     inline uint64_t&    get_uint64_t(size_t i) { return _ulongPtr[i]; };
     inline int64_t&     get_int64_t(size_t i)  { return _longPtr[i]; };

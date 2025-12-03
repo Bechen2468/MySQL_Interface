@@ -28,9 +28,9 @@ _name(name)
             _typeSize = sizeof(uint64_t);
             break;
         case ColumnV2::Type::INT64:   
-            _data = Eigen::VectorX<long long>(size);    
+            _data = Eigen::VectorX<int64_t>(size);    
             _rawPtr = std::get<4>(_data).data();
-            _typeSize = sizeof(long long);
+            _typeSize = sizeof(int64_t);
             break;
         case ColumnV2::Type::FLOAT:   
             _data = Eigen::VectorXf(size);              

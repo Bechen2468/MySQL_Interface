@@ -13,16 +13,17 @@ Matrix::Matrix(const std::vector<mysqlx::Type>& colTypes, size_t size, const std
 }
 
 
+
+
+
 size_t Matrix::rows() const {
     return _columns.empty() ? 0 : _columns[0].size();
 }
 
 
-
 size_t Matrix::cols() const {
     return _columns.size();
 }
-
 
 
 Column& Matrix::column(const std::string& Name) {

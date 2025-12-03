@@ -1,3 +1,29 @@
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'testpass';
+ALTER USER 'root'@'%'         IDENTIFIED WITH mysql_native_password BY 'testpass';
+
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'         WITH GRANT OPTION;
+
+
+
+
+
+DROP PROCEDURE IF EXISTS reset_db;
+DELIMITER $$
+
+
+CREATE PROCEDURE reset_db()
+BEGIN
+
+DROP TABLE IF EXISTS test_string;
+DROP TABLE IF EXISTS test_float;
+DROP TABLE IF EXISTS test_double;
+DROP TABLE IF EXISTS test_int;
+DROP TABLE IF EXISTS test_bool;
+DROP TABLE IF EXISTS test_datetime;
+DROP TABLE IF EXISTS test_multi;
+
+
 
 CREATE TABLE IF NOT EXISTS test_string (
 value VARCHAR(16) PRIMARY KEY
@@ -120,3 +146,11 @@ VALUES
 (4, 2.0, "test", 1, '2025-01-01 01:00:00'),
 (5, 2.5, "test", 0, '2025-01-01 01:00:00'),
 (6, 3.0, "test", 1, '2025-01-01 01:00:00');
+
+
+
+END$$
+
+
+DELIMITER ;
+

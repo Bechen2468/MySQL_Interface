@@ -109,6 +109,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "string_view": "cpp"
     }
 }

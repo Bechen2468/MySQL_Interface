@@ -31,7 +31,7 @@ private:
     std::variant<
         std::vector<std::string>, 
         Eigen::VectorX<uint8_t>,
-        Eigen::VectorXi, Eigen::VectorX<uint64_t>, Eigen::VectorX<long long>,
+        Eigen::VectorXi, Eigen::VectorX<uint64_t>, Eigen::VectorX<int64_t>,
         Eigen::VectorXf, Eigen::VectorXd
         > _data;
 

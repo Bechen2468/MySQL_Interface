@@ -33,7 +33,6 @@ gtest_discover_tests(${PROJECT_NAME})
 
 
 
-
 # --- Custom target to actually RUN the tests ---
 add_custom_target(run_tests
     COMMAND $<TARGET_FILE:mysql-interface-unittests>

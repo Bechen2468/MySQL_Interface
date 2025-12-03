@@ -22,16 +22,15 @@ public:
 
     size_t rows() const;
     size_t cols() const;
-
     
 
     // Templating for inline access. !Only ment for small ramdom access:
     // For full range operations: Pull the vector itself with column()
     template<typename T>
-    T& get(size_t row, const std::string& colName);
+    inline T& get(size_t row, const std::string& colName);
 
     template<typename T>
-    T& get(size_t row, size_t col);
+    inline T& get(size_t row, size_t col);
     
 
     // For full range operations:   Most efficient
@@ -47,15 +46,18 @@ public:
 
 
 
+
+
 template<typename T>
-T& Matrix::get(size_t Row, const std::string& ColName) {
+inline T& Matrix::get(size_t Row, const std::string& ColName) {
     auto col = _nameToIndex.find(ColName);
     if (col == _nameToIndex.end()) throw std::runtime_error("No such column: " + ColName);
     return (*this).template get<T>(Row, col->second);
 }
 
+
 template<typename T>
-T& Matrix::get(size_t Row, size_t Col) {
+inline T& Matrix::get(size_t Row, size_t Col) {
     return _columns[Col].template get<T>(Row);
 }
 
