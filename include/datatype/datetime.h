@@ -1,5 +1,5 @@
-#ifndef MY_DATETIME_H
-#define MY_DATETIME_H
+#ifndef SQLXEIGEN_DATETIME_H
+#define SQLXEIGEN_DATETIME_H
 
 #include <ctime>
 #include <chrono>

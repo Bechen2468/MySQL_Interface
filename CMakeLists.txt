@@ -15,6 +15,7 @@ set(CMAKE_TOOLCHAIN_FILE ${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake CA
 
 
 
+
 project(mysql-interface LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -39,6 +40,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} PUBLIC unofficial::mysql-connector-cpp::connector)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "-d")
+
 
 
 

@@ -1,16 +1,16 @@
-#include "view/table.h"
+#include "view/tableview.h"
 
-namespace sqlxeigen::view {
+namespace sqlxeigen {
 
 
-Table::Table(const std::string& databaseName, const std::string& tableName):
+TableView::TableView(const std::string& databaseName, const std::string& tableName):
 BaseView(databaseName),
 _tableName(tableName)
 {
 }
 
 
-bool Table::executeSelect(const std::vector<std::string>& columns, const std::string& where, const std::string& groupBy, const std::string& having, size_t limit) {
+bool TableView::executeSelect(const std::vector<std::string>& columns, const std::string& where, const std::string& groupBy, const std::string& having, size_t limit) {
     try {
         std::shared_ptr<ConnectionPool> conPool = ConnectionPool::GetPool(_databaseName);
         std::unique_ptr<mysqlx::Session> session = conPool->get_session();
@@ -31,7 +31,7 @@ bool Table::executeSelect(const std::vector<std::string>& columns, const std::st
         this->_rebuildMatrix(res.getColumns(), res.count());
 
         // Set data
-        for(int i = 0; row = res.fetchOne(); ++i) {
+        for(int i = 0; (row = res.fetchOne()); ++i) {
             this->_setFromSQLRow(row, i);
         }
 
@@ -45,7 +45,7 @@ bool Table::executeSelect(const std::vector<std::string>& columns, const std::st
 }
 
 
-int Table::executeInsert(sqlxeigen::matrix::Matrix& data, const std::unordered_map<std::string, std::string>& duplicateUpdate) {
+int TableView::executeInsert(std::shared_ptr<sqlxeigen::SqlMatrix>& data, const std::unordered_map<std::string, std::string>& duplicateUpdate) {
     try {
         std::shared_ptr<ConnectionPool> conPool = ConnectionPool::GetPool(_databaseName);
         std::unique_ptr<mysqlx::Session> session = conPool->get_session();
@@ -65,7 +65,7 @@ int Table::executeInsert(sqlxeigen::matrix::Matrix& data, const std::unordered_m
 }
 
 
-int Table::executeDelete(const std::string& where) {
+int TableView::executeDelete(const std::string& where) {
     try {
         std::shared_ptr<ConnectionPool> conPool = ConnectionPool::GetPool(_databaseName);
         std::unique_ptr<mysqlx::Session> session = conPool->get_session();
@@ -90,30 +90,30 @@ int Table::executeDelete(const std::string& where) {
 }
 
 
-std::string Table::_buildInsert(sqlxeigen::matrix::Matrix& data, const std::unordered_map<std::string, std::string>& duplicateUpdate) {
+std::string TableView::_buildInsert(std::shared_ptr<sqlxeigen::SqlMatrix>& data, const std::unordered_map<std::string, std::string>& duplicateUpdate) {
     std::string query = "INSERT INTO " + _tableName + " (";
 
     // Set fields
-    for(size_t i = 0; i < data.cols(); ++i) {
-        query += data.column(i).name() + (i != data.cols()-1 ? ", " : ") VALUES ");
+    for(size_t i = 0; i < data->cols(); ++i) {
+        query += data->columnName(i) + (i != data->cols()-1 ? ", " : ") VALUES ");
     }
 
     // Add rows
-    for(matrix::Row row = data.row(0); ; row = row.next()) {
+    for(SqlMatrix::RowView row = data->rowView(0); ; row = row.next()) {
         if(!row.isFirst()) query += ", ";
         query += "(";
-        for(int i = 0; i < data.cols(); ++i) {
+        for(int i = 0; i < data->cols(); ++i) {
             if(i != 0) query += ",";
             
             // Insert data
-            switch(data.column(i).type()) {
-                case matrix::Column::Type::STRING:  query += _escapeString(row.get<std::string>(i));  break;
-                case matrix::Column::Type::UINT8:   query += std::to_string(row.get<uint8_t>(i));      break;
-                case matrix::Column::Type::INT:     query += std::to_string(row.get<int>(i));          break;
-                case matrix::Column::Type::UINT64:  query += std::to_string(row.get<uint64_t>(i));     break;
-                case matrix::Column::Type::FLOAT:   query += std::to_string(row.get<float>(i));        break;
-                case matrix::Column::Type::DOUBLE:  query += std::to_string(row.get<double>(i));       break;
-                case matrix::Column::Type::INT64:   query += std::to_string(row.get<int64_t>(i));    break;
+            switch(data->columnType(i)) {
+                case Type::STRING:  query += _escapeString(row.get<std::string>(i)); break;
+                case Type::UINT8:   query += std::to_string(row.get<uint8_t>(i));    break;
+                case Type::INT:     query += std::to_string(row.get<int>(i));        break;
+                case Type::UINT64:  query += std::to_string(row.get<uint64_t>(i));   break;
+                case Type::FLOAT:   query += std::to_string(row.get<float>(i));      break;
+                case Type::DOUBLE:  query += std::to_string(row.get<double>(i));     break;
+                case Type::INT64:   query += std::to_string(row.get<int64_t>(i));    break;
             }
         }
         query += ")";

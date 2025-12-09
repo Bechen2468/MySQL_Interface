@@ -1,29 +1,24 @@
-#ifndef MYSQLX_BASEVIEW_H
-#define MYSQLX_BASEVIEW_H
+#ifndef SQLXEIGEN_BASEVIEW_H
+#define SQLXEIGEN_BASEVIEW_H
 
 #include <iostream>
 #include <string>
 #include "mysql/connection_pool.h"
-#include "datatype/datetime.h"
-#include "datastruct/matrix.h"
-#include "datastruct/row.h"
+#include "datastruct/irowview.h"
 
 
 
-namespace sqlxeigen::view {
+namespace sqlxeigen {
 
 class BaseView {
 public:
-    matrix::Matrix result;
-    
-protected:
+    std::shared_ptr<SqlMatrix> result;
 
+protected:
     const std::string _databaseName;
 
 public:
     BaseView(const std::string& databaseName);
-
-public: // mysql
 
 protected:
     void _rebuildMatrix(const mysqlx::Columns& columns, size_t size);

@@ -1,5 +1,4 @@
-#ifndef UNITTEST_UTILS_H
-#define UNITTEST_UTILS_H
+#pragma once
 
 #include <string>
 #include <cstdlib>
@@ -8,9 +7,10 @@
 #include <chrono>
 #include <thread>
 #include <chrono>
+#include <Eigen/Dense>
 #include <sqlxeigen-lib.h>
 #include <mysqlx/xdevapi.h>
-#include <Eigen/Dense>
+
 
 
 
@@ -218,12 +218,12 @@ namespace utils {
         }
 
         
-        int64_t avg_mymat_inorder(sqlxeigen::matrix::Matrix& data, const std::string& colName) {
+        int64_t avg_mymat_inorder(std::shared_ptr<sqlxeigen::SqlMatrix>& data, const std::string& colName) {
             std::vector<int64_t> results;
             for(int i = 0; i < 100; ++i) {
                 utils::time::Timer t;
                 float r = 0;
-                const size_t s = data.rows();
+                const size_t s = data->rows();
                 t.start();
 
                 #ifdef FORCE_SIMD
@@ -231,7 +231,7 @@ namespace utils {
                 #pragma GCC ivdep
                 #endif
                 for(int j = 0; j < s; ++j) {
-                    r += data.get<float>(j, colName);
+                    r += data->get<float>(j, colName);
                 }
 
                 t.stop();
@@ -249,12 +249,12 @@ namespace utils {
         }
 
         
-        int64_t avg_mymat_index_inorder(sqlxeigen::matrix::Matrix& data, const size_t colIndex) {
+        int64_t avg_mymat_index_inorder(std::shared_ptr<sqlxeigen::SqlMatrix>& data, const size_t colIndex) {
             std::vector<int64_t> results;
             for(int i = 0; i < 100; ++i) {
                 utils::time::Timer t;
                 float r = 0;
-                const size_t s = data.rows();
+                const size_t s = data->rows();
                 t.start();
 
                 #ifdef FORCE_SIMD
@@ -262,7 +262,7 @@ namespace utils {
                 #pragma GCC ivdep
                 #endif
                 for(int j = 0; j < s; ++j) {
-                    r += data.get<float>(j, colIndex);
+                    r += data->get<float>(j, colIndex);
                 }
 
                 t.stop();
@@ -280,12 +280,12 @@ namespace utils {
         }
 
         
-        int64_t avg_mycol_inorder(sqlxeigen::matrix::Column& data) {
+        int64_t avg_mycol_inorder(std::shared_ptr<sqlxeigen::Column<float>> data) {
             std::vector<int64_t> results;
             for(int i = 0; i < 100; ++i) {
                 utils::time::Timer t;
                 float r = 0;
-                const size_t s = data.size();
+                const size_t s = data->size();
                 t.start();
 
                 #ifdef FORCE_SIMD
@@ -293,7 +293,7 @@ namespace utils {
                 #pragma GCC ivdep
                 #endif
                 for(int j = 0; j < s; ++j) {
-                    r += data.get<float>(j);
+                    r += data->get(j);
                 }
 
                 t.stop();
@@ -468,5 +468,3 @@ namespace utils {
     }
 };
 
-
-#endif

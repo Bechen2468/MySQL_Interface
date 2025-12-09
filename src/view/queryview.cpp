@@ -1,9 +1,9 @@
-#include "view/query.h"
+#include "view/queryview.h"
 
 
 namespace sqlxeigen {
 
-view::Query::Query(const std::string& Querystr, const std::string& Database):
+QueryView::QueryView(const std::string& Querystr, const std::string& Database):
 BaseView(Database),
 _querySelect(Querystr)
 {
@@ -12,22 +12,22 @@ _querySelect(Querystr)
 
 
 
-void view::Query::setWhere(const std::string& Where) {
+void QueryView::setWhere(const std::string& Where) {
     _querySelectWhere = Where;
 }
 
 
-void view::Query::setOrderBy(const std::string& Order) {
+void QueryView::setOrderBy(const std::string& Order) {
     _querySelectOrderBy = Order;
 }
 
 
-void view::Query::setLimit(int Limit) {
+void QueryView::setLimit(int Limit) {
     _querySelectLimit = Limit;
 }
 
 
-void view::Query::executeSelect() {
+void QueryView::executeSelect() {
     std::shared_ptr<ConnectionPool> conPool = ConnectionPool::GetPool(_databaseName);
     std::unique_ptr<mysqlx::Session> session = conPool->get_session();
     
@@ -40,7 +40,7 @@ void view::Query::executeSelect() {
     this->_rebuildMatrix(res.getColumns(), res.count());
 
     // Set data
-    for(int i = 0; row = res.fetchOne(); ++i) {
+    for(int i = 0; (row = res.fetchOne()); ++i) {
         this->_setFromSQLRow(row, i);
     }
 
@@ -48,7 +48,7 @@ void view::Query::executeSelect() {
 }
 
 
-std::string view::Query::_buildQuery() {
+std::string QueryView::_buildQuery() {
     std::string query = _querySelect;
     if(_querySelectWhere.length())      query += " WHERE(" + _querySelectWhere + ")";
     if(_querySelectOrderBy.length())    query += " ORDER BY " + _querySelectOrderBy;

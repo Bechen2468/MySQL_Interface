@@ -2,7 +2,7 @@
 
 
 
-namespace sqlxeigen::view {
+namespace sqlxeigen {
 
 
 BaseView::BaseView(const std::string& databaseName):
@@ -21,26 +21,25 @@ void BaseView::_rebuildMatrix(const mysqlx::Columns& columns, size_t size) {
         names.push_back(col->getColumnName());
     }
 
-    result = matrix::Matrix(types, size, names);
+    result = std::make_shared<SqlMatrix>(types, names, size);
 }
 
 
 void BaseView::_setFromSQLRow(mysqlx::Row& row, size_t index) {
-    for(int i = 0; i < result.cols(); ++i) {
-        switch(result.column(i).mysqlType()) {
-            // Cpp vector
+    for(size_t i = 0; i < result->cols(); ++i) {
+        switch(result->columnSqlType(i)) {
             case mysqlx::Type::ENUM:
             case mysqlx::Type::BYTES:
             case mysqlx::Type::TIME:
-            case mysqlx::Type::STRING:      result.get<std::string>(index, i) = row[i].get<std::string>();  break;
+            case mysqlx::Type::STRING:      result->get<std::string>(index, i) = row[i].get<std::string>(); break;
             case mysqlx::Type::TINYINT:
-            case mysqlx::Type::BIT:         result.get<uint8_t>(index, i) = row[i].get<bool>();             break;
-            // Eigen
-            case mysqlx::Type::INT:         result.get<int>(index, i) = row[i].get<int>();                  break;
-            case mysqlx::Type::BIGINT:      result.get<int64_t>(index, i) = row[i].get<int64_t>();          break;
-            case mysqlx::Type::FLOAT:       result.get<float>(index, i) = row[i].get<float>();              break;
+            case mysqlx::Type::BIT:         result->get<uint8_t>(index, i) =     row[i].get<bool>();        break;
+            
+            case mysqlx::Type::INT:         result->get<int>(index, i) =         row[i].get<int>();         break;
+            case mysqlx::Type::BIGINT:      result->get<int64_t>(index, i) =     row[i].get<int64_t>();      break;
+            case mysqlx::Type::FLOAT:       result->get<float>(index, i) =       row[i].get<float>();       break;
             case mysqlx::Type::DECIMAL:
-            case mysqlx::Type::DOUBLE:      result.get<double>(index, i) = row[i].get<double>();            break;
+            case mysqlx::Type::DOUBLE:      result->get<double>(index, i) =      row[i].get<double>();      break;
             case mysqlx::Type::DATE:
             case mysqlx::Type::DATETIME: 
             case mysqlx::Type::TIMESTAMP:
@@ -60,12 +59,12 @@ void BaseView::_setFromSQLRow(mysqlx::Row& row, size_t index) {
                 if(rawLen > 6) dt.second(raw[6]);
                 // if(rawLen > 7) microseconds= ((raw[9] << 14) | (raw[8] << 7) | (raw[7] & 0x7f));
 
-                result.get<int64_t>(index, i) = dt.raw;
+                result->get<int64_t>(index, i) = dt.raw;
                 break;
             }
             default:
-                std::cerr << "ERROR: Query mysqlx-Type not implemented. Type: " << result.column(i).mysqlType() << std::endl;
-                result.get<std::string>(index, i) = row[i].get<std::string>();
+                std::cerr << "ERROR: Query mysqlx-Type not implemented. Type: " << result->columnSqlType(i) << std::endl;
+                result->get<std::string>(index, i) = row[i].get<std::string>();
                 break;
         }
     }

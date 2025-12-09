@@ -1,5 +1,5 @@
-#ifndef CONNECTION_POOL_H
-#define CONNECTION_POOL_H
+#ifndef SQLXEIGEN_CONNECTION_POOL_H
+#define SQLXEIGEN_CONNECTION_POOL_H
 
 #include <iostream>
 #include <string>
